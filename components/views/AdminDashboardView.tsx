@@ -155,13 +155,8 @@ const AdminDashboardView: React.FC<{ language: Language }> = ({ language }) => {
         setStatusMessage({ type: 'loading', message: T.messages.saving });
     
         const statusPromise = new Promise<{ success: boolean; message?: string }>(async (resolve) => {
-            const isUpgradingToVeo = (newStatus === 'lifetime' || newStatus === 'subscription') &&
-                                    (selectedUser.status !== 'lifetime' && selectedUser.status !== 'subscription');
-    
-            if (isUpgradingToVeo && veoAuthorizedUsersCount >= 4) {
-                return resolve({ success: false, message: T.messages.veoLimit });
-            }
-    
+            // Removed Veo limit check logic here to allow unlimited users.
+            
             // Always update if the new status is subscription, to apply new duration
             if (newStatus === 'subscription') {
                 const success = await updateUserSubscription(selectedUser.id, subscriptionDuration);
@@ -370,8 +365,9 @@ const AdminDashboardView: React.FC<{ language: Language }> = ({ language }) => {
                             </span>
                             <span>{T.activeUsers.replace('{count}', String(activeUsersCount))}</span>
                         </div>
-                        <div className={`flex items-center gap-2 text-sm font-semibold py-2 px-3 rounded-lg ${veoAuthorizedUsersCount >= 4 ? 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300' : 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300'}`}>
-                            {veoAuthorizedUsersCount >= 4 ? <AlertTriangleIcon className="w-4 h-4" /> : <VideoIcon className="w-4 h-4" />}
+                        {/* Updated Veo Users badge: Removed limit check and alert styling */}
+                        <div className="flex items-center gap-2 text-sm font-semibold py-2 px-3 rounded-lg bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300">
+                            <VideoIcon className="w-4 h-4" />
                             <span>{T.veoUsers.replace('{count}', String(veoAuthorizedUsersCount))}</span>
                         </div>
                          <button onClick={() => { setUserForHealthCheck(null); setIsHealthModalOpen(true); }} className="flex items-center gap-2 text-sm bg-blue-600 text-white font-semibold py-2 px-3 rounded-lg hover:bg-blue-700 transition-colors">

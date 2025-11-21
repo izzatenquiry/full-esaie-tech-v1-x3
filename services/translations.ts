@@ -91,7 +91,16 @@ const translations = {
             personalToken: 'Personal Token',
             noPersonalToken: 'No personal token is saved. You are using a shared token.',
             healthCheckFailed: 'Health Check Failed',
-            unavailable: 'Unavailable'
+            unavailable: 'Unavailable',
+            currentServer: 'Current Server',
+            notSet: 'Not Set',
+            changeServer: 'Change Server',
+            enterToken: 'Enter Token',
+            save: 'Save',
+            cancel: 'Cancel',
+            saved: 'Saved',
+            saveError: 'Error saving',
+            update: 'Update'
         },
         sidebar: {
             home: "e-Tutorial",
@@ -979,7 +988,7 @@ const translations = {
             subtitle: 'Manage users, subscriptions, and database backups.',
             searchPlaceholder: 'Search by username or email...',
             activeUsers: '{count} Active Users',
-            veoUsers: 'Veo 3.0 Users: {count} / 4',
+            veoUsers: 'Veo 3.0 Users: {count}',
             healthSummary: 'API Health Summary',
             import: 'Import',
             export: 'Export',

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { getContent, getPlatformStatus, getAnnouncements } from '../../services/contentService';
+import { getContent, getPlatformStatus } from '../../services/contentService';
 // FIX: Add missing Language type to component props to resolve type errors.
-import { type TutorialContent, type PlatformStatus, type Announcement, type PlatformSystemStatus, type User, type Language } from '../../types';
-import { ChevronDownIcon, CheckCircleIcon, XIcon, AlertTriangleIcon, MegaphoneIcon, ImageIcon, VideoIcon } from '../Icons';
+import { type TutorialContent, type PlatformStatus, type PlatformSystemStatus, type User, type Language } from '../../types';
+import { ChevronDownIcon, CheckCircleIcon, XIcon, AlertTriangleIcon } from '../Icons';
 import { getTranslations } from '../../services/translations';
 
 interface PlatformUpdatesViewProps {
@@ -11,17 +11,12 @@ interface PlatformUpdatesViewProps {
 
 const PlatformUpdatesView: React.FC<PlatformUpdatesViewProps> = ({ language }) => {
     const [status, setStatus] = useState<PlatformStatus | null>(null);
-    const [announcements, setAnnouncements] = useState<Announcement[]>([]);
     const T = getTranslations(language).eCourseView;
 
     useEffect(() => {
         const fetchUpdates = async () => {
-            const [statusData, announcementsData] = await Promise.all([
-                getPlatformStatus(),
-                getAnnouncements(),
-            ]);
+            const statusData = await getPlatformStatus();
             setStatus(statusData);
-            setAnnouncements(announcementsData);
         };
         fetchUpdates();
     }, []);
@@ -37,16 +32,7 @@ const PlatformUpdatesView: React.FC<PlatformUpdatesViewProps> = ({ language }) =
         }
     };
 
-    const getCategoryBadgeStyle = (category: Announcement['category']) => {
-        switch (category) {
-            case 'New Feature': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300';
-            case 'Improvement': return 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300';
-            case 'Maintenance': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300';
-            case 'General': return 'bg-neutral-100 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-300';
-        }
-    };
-
-    if (!status || announcements.length === 0) {
+    if (!status) {
         return null;
     }
 
@@ -56,7 +42,7 @@ const PlatformUpdatesView: React.FC<PlatformUpdatesViewProps> = ({ language }) =
         <div className="bg-white dark:bg-neutral-900 p-6 rounded-lg shadow-sm h-full flex flex-col">
             <h2 className="text-xl font-bold mb-4 flex-shrink-0">{T.platformUpdates}</h2>
             
-            <div className="mb-6 p-4 bg-neutral-100 dark:bg-neutral-800/50 rounded-lg flex-shrink-0">
+            <div className="p-4 bg-neutral-100 dark:bg-neutral-800/50 rounded-lg flex-shrink-0">
                 <div className="flex items-center gap-3">
                     <Icon className={`w-6 h-6 ${color}`} />
                     <div>
@@ -67,29 +53,6 @@ const PlatformUpdatesView: React.FC<PlatformUpdatesViewProps> = ({ language }) =
                 <p className="text-right text-xs text-neutral-500 dark:text-neutral-500 mt-2">
                     {T.status.lastUpdated} {new Date(status.lastUpdated).toLocaleString()}
                 </p>
-            </div>
-
-            <div className="flex-1 flex flex-col min-h-0">
-                <h3 className="text-lg font-semibold mb-3 flex items-center gap-2 flex-shrink-0">
-                    <MegaphoneIcon className="w-5 h-5" />
-                    {T.announcements}
-                </h3>
-                <div className="space-y-4 overflow-y-auto pr-2 custom-scrollbar">
-                    {announcements.map(announcement => (
-                        <div key={announcement.id} className="border-l-4 border-primary-500 pl-4 py-2">
-                            <div className="flex items-center justify-between">
-                                <h4 className="font-bold text-neutral-800 dark:text-white">{announcement.title}</h4>
-                                <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${getCategoryBadgeStyle(announcement.category)}`}>
-                                    {announcement.category}
-                                </span>
-                            </div>
-                            <p className="text-sm text-neutral-600 dark:text-neutral-300 mt-1">{announcement.content}</p>
-                            <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-2">
-                                {T.postedOn} {new Date(announcement.createdAt).toLocaleDateString()}
-                            </p>
-                        </div>
-                    ))}
-                </div>
             </div>
         </div>
     );

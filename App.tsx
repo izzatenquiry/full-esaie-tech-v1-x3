@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-// FIX: Import Language type for state management.
 import { type View, type User, type BatchProcessorPreset, type Language, UserStatus } from './types';
 import Sidebar from './components/Sidebar';
 import AiTextSuiteView from './components/views/AiTextSuiteView';
@@ -19,7 +18,6 @@ import { loadData, saveData } from './services/indexedDBService';
 import { type Chat } from '@google/genai';
 import { getSupportPrompt } from './services/promptManager';
 import { triggerUserWebhook } from './services/webhookService';
-// FIX: Changed to a named import to resolve the "no default export" error.
 import { GetStartedView } from './components/views/GetStartedView';
 import AiPromptLibrarySuiteView from './components/views/AiPromptLibrarySuiteView';
 import eventBus from './services/eventBus';
@@ -34,7 +32,7 @@ import ConsoleLogSidebar from './components/ConsoleLogSidebar';
 import { getTranslations } from './services/translations';
 import { Logo } from './components/Logo';
 
-
+// ... interfaces ...
 interface VideoGenPreset {
   prompt: string;
   image: { base64: string; mimeType: string; };
@@ -50,8 +48,8 @@ interface Message {
   text: string;
 }
 
+// ... subcomponents ...
 const ThemeSwitcher: React.FC<{ theme: string; setTheme: (theme: string) => void, language: Language }> = ({ theme, setTheme, language }) => {
-    // FIX: Correctly access translations via `common` key.
     const T = getTranslations(language).common;
     return (
     <button
@@ -68,7 +66,6 @@ const ThemeSwitcher: React.FC<{ theme: string; setTheme: (theme: string) => void
 )};
 
 const NotificationBanner: React.FC<{ message: string; onDismiss: () => void, language: Language }> = ({ message, onDismiss, language }) => {
-    // FIX: Correctly access translations via `common` key.
     const T = getTranslations(language).common;
     return (
     <div className="fixed top-16 left-1/2 -translate-x-1/2 w-full max-w-md z-50 p-4">
@@ -95,7 +92,6 @@ interface AssigningTokenModalProps {
 }
 
 const AssigningTokenModal: React.FC<AssigningTokenModalProps> = ({ status, error, scanProgress, onRetry, language }) => {
-    // FIX: Correctly access translations via `assigningTokenModal` key.
     const T = getTranslations(language).assigningTokenModal;
     
     const statusInfo = {
@@ -152,7 +148,6 @@ const SERVERS = [
 ];
 
 const ServerSelectionModal: React.FC<{ onSelect: (serverUrl: string) => void, currentUser: User, language: Language }> = ({ onSelect, currentUser, language }) => {
-    // FIX: Correctly access translations via `serverSelectionModal` key.
     const T = getTranslations(language).serverSelectionModal;
     const [selectedServer, setSelectedServer] = useState<string | null>(null);
     const [serverCounts, setServerCounts] = useState<Record<string, number | 'loading'>>({});
@@ -246,14 +241,14 @@ const ServerSelectionModal: React.FC<{ onSelect: (serverUrl: string) => void, cu
     );
 };
 
-
+// ... Main App component ...
 const App: React.FC = () => {
   const [sessionChecked, setSessionChecked] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [activeApiKey, setActiveApiKey] = useState<string | null>(null);
   const [isApiKeyLoading, setIsApiKeyLoading] = useState(true);
-  const [activeView, setActiveView] = useState<View>('home');
-  const [theme, setTheme] = useState('light'); // Default to light, load async
+  const [activeView, setActiveView] = useState<View>('ai-text-suite');
+  const [theme, setTheme] = useState('light');
   const language: Language = 'en';
   const [videoGenPreset, setVideoGenPreset] = useState<VideoGenPreset | null>(null);
   const [imageToReEdit, setImageToReEdit] = useState<ImageEditPreset | null>(null);
@@ -271,7 +266,6 @@ const App: React.FC = () => {
   const [autoAssignError, setAutoAssignError] = useState<string | null>(null);
   const [notification, setNotification] = useState<string | null>(null);
   
-  // FIX: Correctly access translations via `app` key.
   const T = getTranslations(language).app;
 
   const handleUserUpdate = useCallback((updatedUser: User) => {
@@ -280,31 +274,22 @@ const App: React.FC = () => {
   }, []);
 
   const handleLogout = useCallback(async () => {
-    // We are no longer clearing the proxy server on logout so that admins can see the last used server.
     await signOutUser();
     localStorage.removeItem('currentUser');
-    sessionStorage.removeItem('esaie_tech_session_api_key'); // Clean up session key
-    sessionStorage.removeItem('session_started_at'); // Clean up session start time
-    sessionStorage.removeItem('selectedProxyServer'); // Clean up proxy selection
+    sessionStorage.removeItem('esaie_tech_session_api_key');
+    sessionStorage.removeItem('session_started_at');
+    sessionStorage.removeItem('selectedProxyServer');
     setCurrentUser(null);
     setActiveApiKey(null);
-    setActiveView('home');
+    setActiveView('ai-text-suite');
   }, []);
 
   const handleClearCacheAndRefresh = () => {
     if (window.confirm(T.clearCacheConfirm)) {
         try {
-            console.log("Clearing session and refreshing app...");
-
-            // 1. Clear session-level storage to force re-authentication of keys.
             sessionStorage.clear();
-
-            // 2. Clear local storage to log the user out and reset app state.
             localStorage.clear();
-            
-            // 3. Reload the page. This forces a fresh start.
             window.location.reload();
-
         } catch (error) {
             console.error("Failed to refresh session:", error);
             alert(T.clearCacheError);
@@ -330,21 +315,16 @@ const App: React.FC = () => {
     saveData('theme', theme);
   }, [theme]);
   
-  // Effect to listen for events that require user updates
   useEffect(() => {
     const handleUserUsageUpdate = (updatedUser: User) => {
-      console.log('App: User usage stats updated via event bus. Refreshing state.');
       handleUserUpdate(updatedUser);
     };
-
     eventBus.on('userUsageUpdated', handleUserUsageUpdate);
-
     return () => {
       eventBus.remove('userUsageUpdated', handleUserUsageUpdate);
     };
   }, [handleUserUpdate]);
   
-  // Effect to check for an active session in localStorage on initial load.
   useEffect(() => {
     try {
         const savedUserJson = localStorage.getItem('currentUser');
@@ -354,41 +334,31 @@ const App: React.FC = () => {
             sessionStorage.setItem('session_started_at', new Date().toISOString());
         }
     } catch (error) {
-        console.error("Failed to parse user from localStorage", error);
         localStorage.removeItem('currentUser');
     }
     setSessionChecked(true);
   }, []);
 
-  // Effect to handle personal token failure
   useEffect(() => {
     const handlePersonalTokenFailure = async () => {
       if (currentUser && currentUser.personalAuthToken) {
         setNotification(T.tokenRefreshed);
-        
-        // Clear the bad token from the user's profile
         const result = await saveUserPersonalAuthToken(currentUser.id, null);
         if (result.success) {
           handleUserUpdate(result.user);
         }
-        
-        // Hide notification after a delay
         setTimeout(() => setNotification(null), 8000);
       }
     };
-
     eventBus.on('personalTokenFailed', handlePersonalTokenFailure);
-
     return () => {
       eventBus.remove('personalTokenFailed', handlePersonalTokenFailure);
     };
   }, [currentUser, handleUserUpdate, T.tokenRefreshed]);
 
-  // Effect to fetch session data (API keys, tokens) once a user is logged in.
   useEffect(() => {
     const initializeSessionData = async () => {
       if (!currentUser?.id) {
-        // Clear all session-specific data on logout
         setActiveApiKey(null);
         sessionStorage.removeItem('esaie_tech_session_api_key');
         sessionStorage.removeItem('veoAuthTokens');
@@ -400,39 +370,32 @@ const App: React.FC = () => {
 
       setIsApiKeyLoading(true);
       try {
-        // Fetch master key and VEO tokens in parallel for efficiency
         const [masterKey, tokensData] = await Promise.all([
           getSharedMasterApiKey(),
           getVeoAuthTokens(),
         ]);
 
-        // Handle Master API Key
         if (masterKey) {
           sessionStorage.setItem('esaie_tech_session_api_key', masterKey);
           setActiveApiKey(masterKey);
-          console.log(`Shared master API key (...${masterKey.slice(-4)}) loaded and set in session storage.`);
         } else {
-          console.error("CRITICAL: Could not fetch master API key from Supabase.");
           setActiveApiKey(null);
         }
 
-        // Handle VEO Auth Tokens
         if (tokensData && tokensData.length > 0) {
           sessionStorage.setItem('veoAuthTokens', JSON.stringify(tokensData));
           sessionStorage.setItem('veoAuthToken', tokensData[0].token);
           sessionStorage.setItem('veoAuthTokenCreatedAt', tokensData[0].createdAt);
           setVeoTokenRefreshedAt(new Date().toISOString());
-          console.log(`${tokensData.length} VEO Auth Tokens loaded from Supabase and set in session storage.`);
         } else {
           sessionStorage.removeItem('veoAuthTokens');
           sessionStorage.removeItem('veoAuthToken');
           sessionStorage.removeItem('veoAuthTokenCreatedAt');
-          console.warn("Could not fetch any VEO Auth Tokens from Supabase.");
         }
 
       } catch (error) {
-        console.error("Error initializing session data (API key & VEO tokens):", error);
-        setActiveApiKey(null); // Ensure we're in a clean error state
+        console.error("Error initializing session data:", error);
+        setActiveApiKey(null);
       } finally {
         setIsApiKeyLoading(false);
       }
@@ -445,28 +408,22 @@ const App: React.FC = () => {
   useEffect(() => {
     if (justLoggedIn) {
         setIsShowingWelcome(true);
-        setJustLoggedIn(false); // Reset the flag
+        setJustLoggedIn(false);
     }
   }, [justLoggedIn]);
   
-   // Effect for user heartbeat (active status)
     useEffect(() => {
         if (currentUser?.id) {
-            // Initial update on login
             updateUserLastSeen(currentUser.id);
-
             const heartbeatInterval = setInterval(() => {
                 updateUserLastSeen(currentUser!.id);
-            }, 30000); // Send a heartbeat every 30 seconds
-
+            }, 30000);
             return () => clearInterval(heartbeatInterval);
         }
     }, [currentUser?.id]);
 
-    // Effect for real-time remote logout listener
     useEffect(() => {
         if (!currentUser?.id) return;
-
         const channel = supabase
             .channel(`user-session-channel-${currentUser.id}`)
             .on(
@@ -505,8 +462,6 @@ const App: React.FC = () => {
         isAssigningTokenRef.current = true;
         setAssigningStatus('scanning');
         
-        console.log('Starting auto-assignment process...');
-
         const tokensJSON = sessionStorage.getItem('veoAuthTokens');
         if (!tokensJSON) {
             const errorMsg = "System could not find any available connection tokens. Please contact the admin.";
@@ -522,7 +477,6 @@ const App: React.FC = () => {
             const sharedTokens: { token: string; createdAt: string }[] = JSON.parse(tokensJSON);
             setScanProgress({ current: 0, total: sharedTokens.length });
             
-            // Randomize for load distribution
             for (let i = sharedTokens.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [sharedTokens[i], sharedTokens[j]] = [sharedTokens[j], sharedTokens[i]];
@@ -530,45 +484,31 @@ const App: React.FC = () => {
 
             for (const [index, tokenData] of sharedTokens.entries()) {
                 setScanProgress({ current: index + 1, total: sharedTokens.length });
-                console.log(`[Auto-Assign] Testing shared token... ${tokenData.token.slice(-6)}`);
                 const results = await runComprehensiveTokenTest(tokenData.token);
                 const isImagenOk = results.find(r => r.service === 'Imagen')?.success;
                 const isVeoOk = results.find(r => r.service === 'Veo')?.success;
 
                 if (isImagenOk && isVeoOk) {
-                    console.log(`[Auto-Assign] Found valid token: ...${tokenData.token.slice(-6)}. Assigning to user.`);
                     setAssigningStatus('assigning');
                     const assignResult = await assignPersonalTokenAndIncrementUsage(currentUser.id, tokenData.token);
 
                     if (assignResult.success === false) {
-                        console.warn(`[Auto-Assign] Could not assign token ...${tokenData.token.slice(-6)}: ${assignResult.message}. Trying next.`);
-                        setAssigningStatus('scanning'); // Go back to scanning
+                        setAssigningStatus('scanning');
                         if (assignResult.message === 'DB_SCHEMA_MISSING_COLUMN_personal_auth_token' && currentUser.role === 'admin') {
                             finalError = "Database schema is outdated.";
-                            alert("Database schema is outdated.\n\nPlease go to your Supabase dashboard and run the following SQL command to add the required column:\n\nALTER TABLE public.users ADD COLUMN personal_auth_token TEXT;");
                             break;
                         }
                     } else {
                         handleUserUpdate(assignResult.user);
-                        console.log('[Auto-Assign] Successfully assigned personal token.');
                         tokenAssigned = true;
                         finalError = null;
                         setAssigningStatus('success');
                         break;
                     }
-                } else {
-                    console.warn(`[Auto-Assign] Token ...${tokenData.token.slice(-6)} failed health check. Skipping token.`);
-                    // The functionality to mark tokens as expired is currently disabled per user request.
-                    // updateTokenStatusToExpired(tokenData.token);
                 }
             }
 
-            if (!tokenAssigned) {
-                console.log('[Auto-Assign] No valid shared tokens found after testing all available ones.');
-            }
-
         } catch (error) {
-            console.error('[Auto-Assign] An error occurred during the token assignment process:', error);
             finalError = "An unexpected error occurred during assignment. Please try again.";
         } finally {
             isAssigningTokenRef.current = false;
@@ -590,7 +530,7 @@ const App: React.FC = () => {
             setTimeout(() => {
                 setShowAssignModal(false);
                 setJustLoggedIn(true);
-            }, 1500); // Show success message for a bit
+            }, 1500);
         } else if (result.error) {
             setAutoAssignError(result.error);
         }
@@ -602,8 +542,6 @@ const App: React.FC = () => {
     sessionStorage.setItem('session_started_at', new Date().toISOString());
     
     if (window.location.hostname === 'localhost') {
-        console.log("[Local Development] Skipping server selection modal.");
-        // Directly trigger the post-selection logic for local development
         if (user && !user.personalAuthToken) {
             setShowAssignModal(true);
             setAssigningStatus('scanning');
@@ -622,7 +560,6 @@ const App: React.FC = () => {
             setJustLoggedIn(true);
         }
     } else {
-        // Production logic remains the same
         setShowServerSelectionModal(true);
     }
   };
@@ -645,10 +582,8 @@ const App: React.FC = () => {
   const renderView = () => {
     switch (activeView) {
       case 'home':
-        // FIX: Add missing 'language' prop
         return <ECourseView currentUser={currentUser!} language={language} />;
       case 'get-started':
-        // FIX: Add missing 'language' prop
         return <GetStartedView language={language} />;
       case 'ai-text-suite':
         return <AiTextSuiteView currentUser={currentUser!} language={language} />;
@@ -677,12 +612,10 @@ const App: React.FC = () => {
       case 'ai-prompt-library-suite':
           return <AiPromptLibrarySuiteView onUsePrompt={handleUsePromptInGenerator} language={language} />;
       case 'gallery':
-        // FIX: Add missing 'language' prop
         return <GalleryView onCreateVideo={handleCreateVideoFromImage} onReEdit={handleReEditImage} language={language} />;
       case 'settings':
           return <SettingsView 
                     currentUser={currentUser!} 
-                    // This prop is now obsolete, but kept for compatibility.
                     tempApiKey={null}
                     onUserUpdate={handleUserUpdate} 
                     language={language}
@@ -690,8 +623,7 @@ const App: React.FC = () => {
                     assignTokenProcess={assignTokenProcess}
                  />;
       default:
-        // FIX: Add missing 'language' prop
-        return <ECourseView currentUser={currentUser!} language={language} />;
+        return <AiTextSuiteView currentUser={currentUser!} language={language} />;
     }
   };
   
@@ -706,7 +638,7 @@ const App: React.FC = () => {
   if (isShowingWelcome) {
     return <WelcomeAnimation onAnimationEnd={() => {
         setIsShowingWelcome(false);
-        setActiveView('home');
+        setActiveView('ai-text-suite');
     }} language={language} />;
   }
   
@@ -714,25 +646,18 @@ const App: React.FC = () => {
     return <LoginPage onLoginSuccess={handleLoginSuccess} language={language} />;
   }
 
-  // --- Access Control Logic for Full Version ---
   let isBlocked = false;
   let blockMessage = { title: T.accessDenied, body: "" };
 
   const isSubscriptionActive = currentUser.status === 'subscription' && currentUser.subscriptionExpiry && Date.now() < currentUser.subscriptionExpiry;
 
-  const adminOnlyViews: View[] = [];
-
-  if (adminOnlyViews.includes(activeView) && currentUser.role !== 'admin') {
-      isBlocked = true;
-      blockMessage = { title: T.accessDenied, body: T.adminOnlyFeature };
-  } else if (currentUser.status === 'admin' || currentUser.status === 'lifetime' || isSubscriptionActive) {
+  if (currentUser.status === 'admin' || currentUser.status === 'lifetime' || isSubscriptionActive || currentUser.status === 'trial') {
     isBlocked = false;
   } 
   else if (currentUser.status === 'subscription' && !isSubscriptionActive) {
       isBlocked = true;
       blockMessage = { title: T.subscriptionExpired, body: T.subscriptionExpiredMessage };
   }
-  // Block any other status (e.g., inactive, pending_payment)
   else {
       isBlocked = true;
       blockMessage = { title: T.accessDenied, body: T.accountStatusBlocked.replace('{status}', currentUser.status) };
@@ -791,13 +716,11 @@ const App: React.FC = () => {
           currentUser={currentUser!}
           language={language}
           onSelect={async (serverUrl) => {
-            console.log(`[Server Selection] User chose proxy server: ${serverUrl}`);
             sessionStorage.setItem('selectedProxyServer', serverUrl);
-            updateUserProxyServer(currentUser!.id, serverUrl); // Fire-and-forget update
+            updateUserProxyServer(currentUser!.id, serverUrl);
             setShowServerSelectionModal(false);
             
             if (currentUser && !currentUser.personalAuthToken) {
-                // No token: show modal, run process, then trigger welcome animation.
                 setShowAssignModal(true);
                 setAssigningStatus('scanning');
                 setAutoAssignError(null);
@@ -807,12 +730,11 @@ const App: React.FC = () => {
                     setTimeout(() => {
                       setShowAssignModal(false);
                       setJustLoggedIn(true); 
-                    }, 1500); // Show success message
+                    }, 1500);
                 } else {
                     setAutoAssignError(result.error);
                 }
             } else {
-                // Has token: just trigger welcome animation.
                 setJustLoggedIn(true);
             }
           }}
@@ -829,52 +751,41 @@ const App: React.FC = () => {
         language={language}
       />
       <main className="flex-1 flex flex-col overflow-y-auto min-w-0">
-        {/* Header */}
-        <header className="flex items-center justify-between p-2 border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 sticky top-0 z-10">
-          <div className="flex items-center gap-2">
-            <button onClick={() => setIsSidebarOpen(true)} className="p-2 lg:hidden" aria-label={T.openMenu}>
-              <MenuIcon className="w-6 h-6" />
-            </button>
-             <Logo className="w-28" />
-          </div>
-          <div className="flex items-center gap-2 pr-2">
-              <ThemeSwitcher theme={theme} setTheme={setTheme} language={language} />
-               <button
-                  onClick={() => setIsLogSidebarOpen(true)}
-                  className="p-2 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-                  aria-label={T.openConsole}
-                  title={T.openConsole}
-              >
-                  <TerminalIcon className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
-              </button>
-              <button
-                  onClick={handleClearCacheAndRefresh}
-                  className="p-2 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-                  aria-label={T.refreshSession}
-                  title={T.refreshSessionTooltip}
-              >
-                  <RefreshCwIcon className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
-              </button>
-              <ApiKeyStatus 
-                activeApiKey={activeApiKey} 
-                veoTokenRefreshedAt={veoTokenRefreshedAt} 
-                currentUser={currentUser}
-                assignTokenProcess={assignTokenProcess}
-                onUserUpdate={handleUserUpdate}
-                language={language}
-              />
-          </div>
+        <header className="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 sticky top-0 z-20">
+            <div className="flex items-center gap-4">
+                <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500" aria-label={T.openMenu}>
+                    <MenuIcon className="w-6 h-6" />
+                </button>
+                <div className="lg:hidden">
+                   <Logo className="w-24" />
+                </div>
+            </div>
+            <div className="flex items-center gap-3">
+                 <ApiKeyStatus 
+                    activeApiKey={activeApiKey} 
+                    currentUser={currentUser!} 
+                    assignTokenProcess={assignTokenProcess}
+                    onUserUpdate={handleUserUpdate}
+                    onOpenChangeServerModal={() => setShowServerSelectionModal(true)}
+                    language={language}
+                    veoTokenRefreshedAt={veoTokenRefreshedAt}
+                />
+                <button onClick={() => setIsLogSidebarOpen(!isLogSidebarOpen)} className="p-2 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500" title={T.openConsole}>
+                    <TerminalIcon className="w-5 h-5" />
+                </button>
+                <ThemeSwitcher theme={theme} setTheme={setTheme} language={language} />
+                <button onClick={handleClearCacheAndRefresh} className="p-2 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500" title={T.refreshSessionTooltip}>
+                    <RefreshCwIcon className="w-5 h-5" />
+                </button>
+            </div>
         </header>
-        {notification && <NotificationBanner message={notification} onDismiss={() => setNotification(null)} language={language} />}
-        <div className="flex-1 p-4 md:p-8">
-          {PageContent}
+
+        <div className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
+            {notification && <NotificationBanner message={notification} onDismiss={() => setNotification(null)} language={language} />}
+            {PageContent}
         </div>
       </main>
-      <ConsoleLogSidebar 
-        isOpen={isLogSidebarOpen}
-        onClose={() => setIsLogSidebarOpen(false)}
-        language={language}
-      />
+      <ConsoleLogSidebar isOpen={isLogSidebarOpen} onClose={() => setIsLogSidebarOpen(false)} language={language} />
     </div>
   );
 };

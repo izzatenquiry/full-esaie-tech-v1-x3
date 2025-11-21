@@ -8,7 +8,7 @@ const PLATFORM_STATUS_KEY = 'esaie-tech-platform-status';
 const ANNOUNCEMENTS_KEY = 'esaie-tech-announcements';
 
 const defaultTutorialContent: TutorialContent = {
-  mainVideoUrl: 'https://www.youtube.com/embed/G6G8JJrV9VM',
+  mainVideoUrl: 'https://www.youtube.com/embed/',
   mainTitle: 'Welcome to ESAIE',
   mainDescription: 'Welcome! This video is your introduction to the ESAIE platform. Understand the overview, powerful features, and how to get started on your AI-powered creative projects.',
   tutorials: [

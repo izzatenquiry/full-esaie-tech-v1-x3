@@ -67,8 +67,8 @@ async function getJson(response, req) {
 app.use(cors({
   origin: [
     'http://localhost:8080',
-    'https://dev.monoklix.com',
-    'https://monoklix.com'
+    'https://dev.esaie.tech',
+    'https://esaie.tech'
   ],
   credentials: true
 }));
@@ -421,7 +421,7 @@ app.get('/api/veo/download-video', async (req, res) => {
 
     const contentType = response.headers.get('content-type') || 'video/mp4';
     const contentLength = response.headers.get('content-length');
-    const filename = `monoklix-video-${Date.now()}.mp4`;
+    const filename = `esaie-video-${Date.now()}.mp4`;
 
     log('log', req, '📦 Video headers received:', { contentType, contentLength });
 
